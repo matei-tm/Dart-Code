@@ -190,10 +190,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const completionItemProvider = isUsingLsp ? undefined : new DartCompletionItemProvider(analyzer);
 	const referenceProvider = isUsingLsp ? undefined : new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
-	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);
-	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
-	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
-	const sourceCodeActionProvider = new SourceCodeActionProvider(analyzer);
+	const assistCodeActionProvider = isUsingLsp ? undefined : new AssistCodeActionProvider(analyzer);
+	const fixCodeActionProvider = isUsingLsp ? undefined : new FixCodeActionProvider(analyzer);
+	const refactorCodeActionProvider = isUsingLsp ? undefined : new RefactorCodeActionProvider(analyzer);
+	const sourceCodeActionProvider = isUsingLsp ? undefined : new SourceCodeActionProvider(analyzer);
 	const ignoreLintCodeActionProvider = new IgnoreLintCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
 	const implementationProvider = new DartImplementationProvider(analyzer);
@@ -217,16 +217,20 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
 		}
 		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(filter, documentHighlightProvider));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, assistCodeActionProvider, assistCodeActionProvider.metadata));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider, fixCodeActionProvider.metadata));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, refactorCodeActionProvider, refactorCodeActionProvider.metadata));
+		if (assistCodeActionProvider)
+			context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, assistCodeActionProvider, assistCodeActionProvider.metadata));
+		if (fixCodeActionProvider)
+			context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider, fixCodeActionProvider.metadata));
+		if (refactorCodeActionProvider)
+			context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, refactorCodeActionProvider, refactorCodeActionProvider.metadata));
 		context.subscriptions.push(vs.languages.registerRenameProvider(filter, renameProvider));
 	});
 
 	// Some actions only apply to Dart.
 	if (formattingEditProvider)
 		context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, formattingEditProvider, "}", ";"));
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
+	if (sourceCodeActionProvider)
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, ignoreLintCodeActionProvider, ignoreLintCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
 	if (config.showTestCodeLens) {
